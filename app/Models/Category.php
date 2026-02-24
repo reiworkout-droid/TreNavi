@@ -9,4 +9,9 @@ class Category extends Model
 {
     /** @use HasFactory<\Database\Factories\CategoryFactory> */
     use HasFactory;
+
+    //トレーナーテーブルとの中間テーブル
+    public function trainers() {
+      return $this->belongsToMany(trainer::class)->withTimestamps();
+    }
 }

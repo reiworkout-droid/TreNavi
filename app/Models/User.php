@@ -47,6 +47,15 @@ class User extends Authenticatable
     }
 
     /**
-     * 
+     * トレーナーテーブルとの関連づけ
      */
+    public function trainer() {
+        return $this->hasOne(Trainer::class);
+    }
+
+    //reservationテーブルとの関連づけ
+    public function reservations() {
+        return $this->hasMany(Reservation::class);
+    }
+
 }
