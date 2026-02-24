@@ -17,9 +17,6 @@ return new class extends Migration
             $table->string('name');
             $table->string('tel')->nullable();
             $table->date('birth')->nullable();            
-            $table->foreignId('prefecture_id')->constrained()->cascadeOnDelete();
-            $table->foreignId('city_id')->constrained()->cascadeOnDelete();
-            $table->foreignId('area_id')->constrained()->cascadeOnDelete();
             $table->string('record')->nullable();
             $table->text('bio')->nullable();
             $table->timestamps();
