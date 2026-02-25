@@ -4,6 +4,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\TrainerController;
 
 // 登録APIのルート
 Route::post('/register', [AuthController::class, 'register']);
@@ -18,3 +19,8 @@ Route::middleware('auth:sanctum')->post('/logout', [AuthController::class, 'logo
 Route::middleware(['auth:sanctum'])->get('/user', function (Request $request) {
     return $request->user();
 });
+
+// トレーナー一覧APIのルート
+Route::get('/trainers', [TrainerController::class, 'index']);
+// 特定のトレーナーの詳細APIのルート
+Route::get('/trainers/{trainer}', [TrainerController::class, 'show']);
