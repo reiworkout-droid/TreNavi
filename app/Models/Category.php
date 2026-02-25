@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Trainer;
 
 class Category extends Model
 {
@@ -12,6 +13,6 @@ class Category extends Model
 
     //トレーナーテーブルとの中間テーブル
     public function trainers() {
-      return $this->belongsToMany(trainer::class)->withTimestamps();
+      return $this->belongsToMany(Trainer::class)->withTimestamps();
     }
 }
