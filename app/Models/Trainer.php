@@ -13,6 +13,15 @@ class Trainer extends Model
     /** @use HasFactory<\Database\Factories\TrainerFactory> */
     use HasFactory;
 
+    protected $fillable = [
+        'user_id',
+        'name',
+        'tel',
+        'birth',
+        'record',
+        'bio',
+    ];
+
     //ユーザーテーブルとの関連づけ
     public function user() {
         return $this->belongsTo(User::class);

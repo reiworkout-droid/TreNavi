@@ -20,7 +20,12 @@ Route::middleware(['auth:sanctum'])->get('/user', function (Request $request) {
     return $request->user();
 });
 
-// トレーナー一覧APIのルート
-Route::get('/trainers', [TrainerController::class, 'index']);
-// 特定のトレーナーの詳細APIのルート
-Route::get('/trainers/{trainer}', [TrainerController::class, 'show']);
+Route::middleware('auth:sanctum')->group(function () {
+
+    Route::post('/trainers', [TrainerController::class, 'store']);
+
+    // トレーナー一覧APIのルート
+    Route::get('/trainers', [TrainerController::class, 'index']);
+    // 特定のトレーナーの詳細APIのルート
+    Route::get('/trainers/{trainer}', [TrainerController::class, 'show']);
+});
