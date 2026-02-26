@@ -25,10 +25,13 @@ class TrainerController extends Controller
             'areas_ids.*' => 'exists:areas,id',
             'categories_ids' => 'required|array',
             'categories_ids.*' => 'exists:categories,id',
+            'specialities_ids' => 'required|array',
+            'specialities_ids.*' => 'exists:specialities,id',
         ]);
 
         // トランザクションを使用して、トレーナーの作成と関連付けを一括で行う
         return DB::transaction(function () use ($validated) {
+            // トレーナーの作成
             $trainer = Trainer::create([
                 'user_id' => auth()->id(), // 認証されたユーザーのIDを取得
                 'name' => $validated['name'],
@@ -38,23 +41,24 @@ class TrainerController extends Controller
                 'bio' => $validated['bio'] ?? null,
             ]);
 
-            // トレーナーとエリア、カテゴリーの関連付け
+            // belongsToManyのリレーションを使用して、areasとcategoriesの関連付けを行う
             $trainer->areas()->attach($validated['areas_ids']);
             $trainer->categories()->attach($validated['categories_ids']);
+            $trainer->specialities()->attach($validated['specialities_ids']);
 
             // 作成したトレーナーの情報とリレーションデータを一緒に返す
-            return response()->json($trainer->load(['areas', 'categories']), 201);
+            return response()->json($trainer->load(['areas', 'categories', 'specialities']), 201);
         });
     }
 
     // トレーナーの一覧を取得するメソッド
     public function index()
         {
-            return Trainer::with(['areas', 'categories'])->paginate(10);
+            return Trainer::with(['areas', 'categories', 'specialities'])->paginate(10);
         }
     // 特定のトレーナーの詳細を取得するメソッド
     public function show(Trainer $trainer)
         {
-            return $trainer->load(['areas', 'categories']);
+            return $trainer->load(['areas', 'categories', 'specialities']);
         }
 }

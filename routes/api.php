@@ -20,6 +20,7 @@ Route::middleware(['auth:sanctum'])->get('/user', function (Request $request) {
     return $request->user();
 });
 
+// トレーナー関連のAPIルートは、認証されたユーザーのみアクセス可能にするため、auth:sanctumミドルウェアでグループ化
 Route::middleware('auth:sanctum')->group(function () {
 
     Route::post('/trainers', [TrainerController::class, 'store']);
