@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Models\User;
 use App\Models\Trainer;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
@@ -10,13 +11,10 @@ use Illuminate\Database\Eloquent\Factories\Factory;
  */
 class TrainerFactory extends Factory
 {
-    /**
-     * Define the model's default state.
-     *
-     * @return array<string, mixed>
-     */
+    // 生成するモデルを指定
     protected $model = Trainer::class;
 
+    // ダミーデータの定義
     public function definition(): array
     {
         return [
@@ -26,7 +24,7 @@ class TrainerFactory extends Factory
             'birth' => $this->faker->date(),
             'record' => $this->faker->sentence(),
             'bio' => $this->faker->paragraph(),
-            'user_id' => 1, // テスト用に固定
+            'user_id' => User::factory(), // ← テスト用
         ];
     }
 }
