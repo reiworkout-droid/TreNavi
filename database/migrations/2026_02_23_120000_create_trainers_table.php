@@ -20,6 +20,7 @@ return new class extends Migration
             $table->string('record')->nullable();
             $table->text('bio')->nullable();
             $table->timestamps();
+            $table->string('profile_image')->nullable();
         });
     }
 

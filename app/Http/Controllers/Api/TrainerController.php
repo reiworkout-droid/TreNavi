@@ -46,6 +46,18 @@ class TrainerController extends Controller
             $trainer->categories()->attach($validated['categories_ids']);
             $trainer->specialities()->attach($validated['specialities_ids']);
 
+            // 画像があれば保存
+            if ($request->hasFile('profile_image')) {
+
+                $path = $request->file('profile_image')
+                                ->store('trainers', 'public');
+
+                $trainer->profile_image = $path;
+            }
+
+            $trainer->save();
+
+
             // 作成したトレーナーの情報とリレーションデータを一緒に返す
             return response()->json($trainer->load(['areas', 'categories', 'specialities']), 201);
         });
