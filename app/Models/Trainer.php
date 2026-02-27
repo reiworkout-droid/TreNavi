@@ -20,6 +20,7 @@ class Trainer extends Model
         'birth',
         'record',
         'bio',
+        'profile_image',
     ];
 
     //ユーザーテーブルとの関連づけ
