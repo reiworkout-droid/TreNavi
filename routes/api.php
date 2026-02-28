@@ -25,6 +25,10 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::post('/trainers', [TrainerController::class, 'store']);
 
+    Route::put('/trainers/{trainer}', [TrainerController::class, 'update']);
+
+    Route::delete('/trainers/{trainer}', [TrainerController::class, 'destroy']);
+
     // トレーナー一覧APIのルート
     Route::get('/trainers', [TrainerController::class, 'index']);
     // 特定のトレーナーの詳細APIのルート
