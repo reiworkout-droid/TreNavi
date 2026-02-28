@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use App\Models\Category;
 use App\Models\Speciality;
 use App\Models\Area;
+use Illuminate\Support\Facades\Storage;
 
 class Trainer extends Model
 {
@@ -22,6 +23,19 @@ class Trainer extends Model
         'bio',
         'profile_image',
     ];
+
+    protected static function booted()
+    {
+        static::deleting(function ($trainer) {
+            $trainer->areas()->detach();
+            $trainer->categories()->detach();
+            $trainer->specialities()->detach();
+            // 画像ファイルが存在する場合は削除        
+            if ($trainer->profile_image) {
+            Storage::disk('public')->delete($trainer->profile_image);
+            }
+        });
+    }
 
     //ユーザーテーブルとの関連づけ
     public function user() {
