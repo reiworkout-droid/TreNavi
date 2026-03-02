@@ -11,7 +11,6 @@ class Plan extends Model
     use HasFactory;
 
     protected $fillable = [
-        'trainer_id',
         'name',
         'description',
         'price',

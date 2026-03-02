@@ -36,4 +36,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/trainers/{trainer}', [TrainerController::class, 'show']);
     // トレーナーのプラン作成APIのルート
     Route::post('/trainers/{trainer}/plans', [PlanController::class, 'store']);
+
+    Route::patch('trainers/{trainer}/plans/{plan}', [PlanController::class, 'update']);
+
 });

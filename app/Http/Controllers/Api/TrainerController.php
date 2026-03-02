@@ -69,6 +69,10 @@ class TrainerController extends Controller
     // トレーナーの情報を変更するメソッド
     public function update(Request $request, Trainer $trainer)
     {
+        if (auth()->id() !== $trainer->user_id) {
+            abort(403);
+        }
+
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'tel' => 'nullable|string',
@@ -83,14 +87,9 @@ class TrainerController extends Controller
             'specialities_ids.*' => 'exists:specialities,id',
             'profile_image' => 'nullable|image|max:2048', // 2MBまで
         ]);
+
         // 基本情報更新
-        $trainer->update([
-            'name' => $validated['name'],
-            'tel' => $validated['tel'] ?? null,
-            'birth' => $validated['birth'] ?? null,
-            'record' => $validated['record'] ?? null,
-            'bio' => $validated['bio'] ?? null,
-        ]);
+        $trainer->update($validated);
 
         // リレーション更新
         $trainer->areas()->sync($validated['areas_ids']);
@@ -120,6 +119,10 @@ class TrainerController extends Controller
     // トレーナーの情報を削除するメソッド
     public function destroy(Trainer $trainer)
     {
+        if (auth()->id() !== $trainer->user_id) {
+            abort(403);
+        }
+        
         $trainer->delete();
         return response()->json(null, 204);
     }
