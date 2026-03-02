@@ -66,6 +66,7 @@ class TrainerController extends Controller
         });
     }
 
+    // トレーナーの情報を変更するメソッド
     public function update(Request $request, Trainer $trainer)
     {
         $validated = $request->validate([
@@ -116,20 +117,61 @@ class TrainerController extends Controller
         );    
     }
 
+    // トレーナーの情報を削除するメソッド
     public function destroy(Trainer $trainer)
     {
         $trainer->delete();
         return response()->json(null, 204);
     }
 
-    // トレーナーの一覧を取得するメソッド
-    public function index()
-        {
-            return Trainer::with(['areas', 'categories', 'specialities'])->paginate(10);
+    // トレーナーを検索して一覧を取得するメソッド
+    public function index(Request $request)
+    {
+        // SQLクエリを構築するためのクエリビルダを作成
+        $query = Trainer::query();
+        // area_idが空でない場合は、areasテーブルとのリレーションの中で条件を満たすTrainerを絞り込む
+        if ($request->filled('area_id')) {
+            $query->whereHas('areas', function ($q) use ($request) {
+                $q->where('id', $request->area_id);
+            });
         }
-    // 特定のトレーナーの詳細を取得するメソッド
+        // category_idが空でない場合は、categoriesテーブルとのリレーションの中で条件を満たすTrainerを絞り込む
+        if ($request->filled('category_id')) {
+            $query->whereHas('categories', function ($q) use ($request) {
+                $q->where('id', $request->category_id);
+            });
+        }
+
+        // speciality_idが空でない場合は、specialitiesテーブルとのリレーションの中で条件を満たすTrainerを絞り込む
+        if ($request->filled('speciality_id')) {
+            $query->whereHas('specialities', function ($q) use ($request) {
+                $q->where('id', $request->speciality_id);
+            });
+        }
+
+        // キーワードがある場合は、nameまたはrecordにキーワードが含まれるTrainerを絞り込む
+        if ($request->filled('keyword')) {
+            $query->where(function ($q) use ($request) {
+                $q->where('name', 'like', '%' . $request->keyword . '%')
+                  ->orWhere('record', 'like', '%' . $request->keyword . '%');
+        });
+        }
+        // クエリを実行して、関連するareas、categories、specialities、planのデータも一緒に取得し、10件ずつページネーションする
+        return $query
+            ->with(['areas', 'categories', 'specialities'])
+            ->withMin(['plans' => function ($q) {
+                $q->where('is_active', true);
+            }], 'price')
+            ->paginate(10);
+    }
+
+    // トレーナーの詳細情報を取得するメソッド
     public function show(Trainer $trainer)
-        {
-            return $trainer->load(['areas', 'categories', 'specialities']);
-        }
+    {
+        return response()->json(
+            $trainer->load(['areas', 'categories', 'specialities', 'plans' => function ($q) {
+            $q->where('is_active', true);
+        }])
+        );
+    }
 }

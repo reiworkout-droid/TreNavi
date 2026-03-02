@@ -30,9 +30,10 @@ class Trainer extends Model
             $trainer->areas()->detach();
             $trainer->categories()->detach();
             $trainer->specialities()->detach();
+            $trainer->plans()->delete();
             // 画像ファイルが存在する場合は削除        
             if ($trainer->profile_image) {
-            Storage::disk('public')->delete($trainer->profile_image);
+                Storage::disk('public')->delete($trainer->profile_image);
             }
         });
     }

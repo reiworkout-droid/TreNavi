@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Route;
 
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\TrainerController;
+use App\Http\Controllers\Api\PlanController;
 
 // 登録APIのルート
 Route::post('/register', [AuthController::class, 'register']);
@@ -33,4 +34,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/trainers', [TrainerController::class, 'index']);
     // 特定のトレーナーの詳細APIのルート
     Route::get('/trainers/{trainer}', [TrainerController::class, 'show']);
+    // トレーナーのプラン作成APIのルート
+    Route::post('/trainers/{trainer}/plans', [PlanController::class, 'store']);
 });

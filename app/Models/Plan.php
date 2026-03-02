@@ -10,6 +10,16 @@ class Plan extends Model
     /** @use HasFactory<\Database\Factories\PlanFactory> */
     use HasFactory;
 
+    protected $fillable = [
+        'trainer_id',
+        'name',
+        'description',
+        'price',
+        'plan_type',
+        'duration_minutes',
+        'session_count',
+        'is_active',
+        ];
 
     //トレーナーテーブルとの関連づけ
     public function trainer() {
