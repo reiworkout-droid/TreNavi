@@ -10,6 +10,16 @@ class Reservation extends Model
     /** @use HasFactory<\Database\Factories\ReservationFactory> */
     use HasFactory;
 
+    protected $fillable = [
+        'user_id',
+        'trainer_id',
+        'plan_id',
+        'reserver_at',
+        'end_at',
+        'status',
+        'price_snapshot'
+    ];
+
     // userテーブルとの関連づけ
     public function user() {
         return $this->belongsTo(User::class);
