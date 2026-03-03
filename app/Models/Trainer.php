@@ -67,4 +67,8 @@ class Trainer extends Model
     public function areas() {
         return $this->belongsToMany(Area::class)->withTimestamps();
     }
+
+    public function likes() {
+        return $this->belongsToMany(User::class, 'trainer_user')->withTimestamps();
+    }
 }
