@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\TrainerController;
 use App\Http\Controllers\Api\PlanController;
 use App\Http\Controllers\Api\ReservationController;
+use App\Http\Controllers\Api\TrainerLikeController;
 
 // 登録APIのルート
 Route::post('/register', [AuthController::class, 'register']);
@@ -46,5 +47,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('trainers/{trainer}/plans/{plan}/reservations/{reservation}', [ReservationController::class, 'show']); // 詳細
     Route::patch('trainers/{trainer}/plans/{plan}/reservations/{reservation}', [ReservationController::class, 'update']); // ステータス更新
     Route::delete('trainers/{trainer}/plans/{plan}/reservations/{reservation}', [ReservationController::class, 'destroy']); // キャンセル
-
+    // いいね機能のAPIルート
+    Route::post('/trainers/{trainer}/like', [TrainerLikeController::class, 'store'])->name('trainer.like'); // トレーナーにいいね
+    Route::delete('/trainers/{trainer}/like', [TrainerLikeController::class, 'destroy'])->name('trainer.unlike'); // トレーナーのいいねを解除
 });

@@ -165,6 +165,14 @@ class TrainerController extends Controller
             ->withMin(['plans' => function ($q) {
                 $q->where('is_active', true);
             }], 'price')
+            ->withCount('likedUsers') // いいね数を取得
+            ->when(auth()->check(), function ($q) {
+                $q->withExists([
+                    'likedUsers as is_liked' => function ($subQuery) {
+                        $subQuery->where('user_id', auth()->id());
+                    }
+                ]);
+            })
             ->paginate(10);
     }
 
@@ -174,7 +182,11 @@ class TrainerController extends Controller
         return response()->json(
             $trainer->load(['areas', 'categories', 'specialities', 'plans' => function ($q) {
             $q->where('is_active', true);
-        }])
+            }])
+            ->withCount('likedUsers')
+            ->withExists(['likedUsers as is_liked' => function ($q) {
+                $q->where('user_id', auth()->id());
+            }])
         );
     }
 }

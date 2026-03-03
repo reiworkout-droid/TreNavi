@@ -60,4 +60,7 @@ class User extends Authenticatable
         return $this->hasMany(Reservation::class);
     }
 
+    public function likes() {
+        return $this->belongsToMany(Trainer::class, 'trainer_user')->withTimestamps();
+    }
 }
