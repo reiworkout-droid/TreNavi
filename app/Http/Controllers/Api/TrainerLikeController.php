@@ -13,6 +13,7 @@ class TrainerLikeController extends Controller
      */
 public function store(Trainer $trainer)
 {
+    // いいねを追加（重複は無視）
     $trainer->likes()->syncWithoutDetaching(auth()->id());
     return response()->json([
         'message' => 'Trainer liked successfully'
@@ -23,10 +24,19 @@ public function store(Trainer $trainer)
      */
     public function destroy(Trainer $trainer)
     {
+        // いいねを削除
         $trainer->likes()->detach(auth()->id());
 
         return response()->json([
             'message' => 'Trainer unliked successfully'
         ]);
+    }
+
+    public function index()
+    {
+        // 認証ユーザーがいいねしたトレーナーを取得
+        $likedTrainers = auth()->user()->likedTrainers()->get();
+
+        return response()->json($likedTrainers);
     }
 }

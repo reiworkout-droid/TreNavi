@@ -63,4 +63,8 @@ class User extends Authenticatable
     public function likes() {
         return $this->belongsToMany(Trainer::class, 'trainer_user')->withTimestamps();
     }
+
+    public function roles() {
+        return $this->belongsToMany(Role::class)->withTimestamps();
+    }
 }

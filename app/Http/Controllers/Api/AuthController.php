@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 
 use App\Models\User;
+use App\Models\Role;
 use Illuminate\Support\Facades\Hash;
 use Auth;
 
@@ -25,6 +26,10 @@ class AuthController extends Controller
       'email' => $validatedData['email'],
       'password' => Hash::make($validatedData['password']),
     ]);
+
+    // ユーザーにクライアントロールを割り当てる
+    $clientRole = Role::where('name', 'client')->first();
+    $user->roles()->attach($clientRole->id);
 
     $token = $user->createToken('auth_token')->plainTextToken;
 
@@ -47,11 +52,12 @@ class AuthController extends Controller
       ], 401);
     }
 
-    $user = User::where('email', $request['email'])->firstOrFail();
+    $user = User::where('email', $request['email'])->with('roles')->firstOrFail();
 
     $token = $user->createToken('auth_token')->plainTextToken;
 
     return response()->json([
+      'user' => new UserResource($user),
       'access_token' => $token,
       'token_type' => 'Bearer',
     ]);
