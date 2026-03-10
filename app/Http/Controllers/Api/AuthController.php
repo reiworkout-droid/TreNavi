@@ -52,17 +52,12 @@ class AuthController extends Controller
       ], 401);
     }
 
-    $user = User::where('email', $request['email'])->with('roles')->firstOrFail();
-
-    $token = $user->createToken('auth_token')->plainTextToken;
+    $request->session()->regenerate();
 
     return response()->json([
-      'user' => new UserResource($user),
-      'access_token' => $token,
-      'token_type' => 'Bearer',
+        'user' => Auth::user()
     ]);
-  }
-
+}
   // 認証されたユーザーのアクセストークンを削除してログアウトする
   public function logout(Request $request)
   {
