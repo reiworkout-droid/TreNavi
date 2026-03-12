@@ -8,6 +8,9 @@ use App\Http\Controllers\Api\TrainerController;
 use App\Http\Controllers\Api\PlanController;
 use App\Http\Controllers\Api\ReservationController;
 use App\Http\Controllers\Api\TrainerLikeController;
+use App\Http\Controllers\Api\PrefectureController;
+use App\Http\Controllers\Api\CityController;
+use App\Http\Controllers\Api\AreaController;
 
 // 登録APIのルート
 Route::post('/register', [AuthController::class, 'register']);
@@ -22,6 +25,19 @@ Route::middleware('auth:sanctum')->post('/logout', [AuthController::class, 'logo
 Route::middleware(['auth:sanctum'])->get('/user', function (Request $request) {
     return $request->user();
 });
+
+// 認証されたユーザーの情報を取得するAPIのルート
+Route::middleware(['auth:sanctum'])->get('/user', function (Request $request) {
+    return $request->user();
+});
+
+Route::get('/ping', function () {
+    return ['status' => 'ok'];
+});
+
+Route::get('/prefectures', [PrefectureController::class,'index']);
+Route::get('/cities', [CityController::class,'index']);
+Route::get('/areas', [AreaController::class,'index']);
 
 // トレーナー関連のAPIルートは、認証されたユーザーのみアクセス可能にするため、auth:sanctumミドルウェアでグループ化
 Route::middleware('auth:sanctum')->group(function () {

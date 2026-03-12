@@ -16,9 +16,15 @@ class TrainerController extends Controller
 
     public function store(Request $request)
     {
+        // 認証されたユーザーを取得
+        $user = auth()->user();
+        if (!$user) {
+            return response()->json(['error' => 'Unauthenticated'], 401);
+        }
+
         // リクエストのバリデーション
         $validated = $request->validate([
-            'name' => 'required|string|max:255',
+            // 'name' => 'required|string|max:255',
             'tel' => 'nullable|string',
             'birth' => 'nullable|date',
             'record' => 'nullable|string',
@@ -37,7 +43,7 @@ class TrainerController extends Controller
             // トレーナーの作成
             $trainer = Trainer::create([
                 'user_id' => auth()->id(), // 認証されたユーザーのIDを取得
-                'name' => $validated['name'],
+                // 'name' => $validated['name'],
                 'tel' => $validated['tel'] ?? null,
                 'birth' => $validated['birth'] ?? null,
                 'record' => $validated['record'] ?? null,
