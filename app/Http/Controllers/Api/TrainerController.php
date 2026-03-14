@@ -16,9 +16,15 @@ class TrainerController extends Controller
 
     public function store(Request $request)
     {
+        // 認証されたユーザーを取得
+        $user = auth()->user();
+        if (!$user) {
+            return response()->json(['error' => 'Unauthenticated'], 401);
+        }
+
         // リクエストのバリデーション
         $validated = $request->validate([
-            'name' => 'required|string|max:255',
+            // 'name' => 'required|string|max:255',
             'tel' => 'nullable|string',
             'birth' => 'nullable|date',
             'record' => 'nullable|string',
@@ -37,7 +43,7 @@ class TrainerController extends Controller
             // トレーナーの作成
             $trainer = Trainer::create([
                 'user_id' => auth()->id(), // 認証されたユーザーのIDを取得
-                'name' => $validated['name'],
+                // 'name' => $validated['name'],
                 'tel' => $validated['tel'] ?? null,
                 'birth' => $validated['birth'] ?? null,
                 'record' => $validated['record'] ?? null,
@@ -131,24 +137,27 @@ class TrainerController extends Controller
     public function index(Request $request)
     {
         // SQLクエリを構築するためのクエリビルダを作成
-        $query = Trainer::query();
+        $query = Trainer::query()
+            ->with(['user', 'areas', 'categories', 'specialities'])
+            ->withCount('likes');
+
         // area_idが空でない場合は、areasテーブルとのリレーションの中で条件を満たすTrainerを絞り込む
         if ($request->filled('area_id')) {
             $query->whereHas('areas', function ($q) use ($request) {
-                $q->where('id', $request->area_id);
+                $q->where('areas.id', $request->area_id);
             });
         }
         // category_idが空でない場合は、categoriesテーブルとのリレーションの中で条件を満たすTrainerを絞り込む
         if ($request->filled('category_id')) {
             $query->whereHas('categories', function ($q) use ($request) {
-                $q->where('id', $request->category_id);
+                $q->where('categories.id', $request->category_id);
             });
         }
 
         // speciality_idが空でない場合は、specialitiesテーブルとのリレーションの中で条件を満たすTrainerを絞り込む
         if ($request->filled('speciality_id')) {
             $query->whereHas('specialities', function ($q) use ($request) {
-                $q->where('id', $request->speciality_id);
+                $q->where('specialities.id', $request->speciality_id);
             });
         }
 
@@ -161,14 +170,12 @@ class TrainerController extends Controller
         }
         // クエリを実行して、関連するareas、categories、specialities、planのデータも一緒に取得し、10件ずつページネーションする
         return $query
-            ->with(['areas', 'categories', 'specialities'])
             ->withMin(['plans' => function ($q) {
                 $q->where('is_active', true);
             }], 'price')
-            ->withCount('likedUsers') // いいね数を取得
             ->when(auth()->check(), function ($q) {
                 $q->withExists([
-                    'likedUsers as is_liked' => function ($subQuery) {
+                    'likes as is_liked' => function ($subQuery) {
                         $subQuery->where('user_id', auth()->id());
                     }
                 ]);
@@ -179,14 +186,25 @@ class TrainerController extends Controller
     // トレーナーの詳細情報を取得するメソッド
     public function show(Trainer $trainer)
     {
-        return response()->json(
-            $trainer->load(['areas', 'categories', 'specialities', 'plans' => function ($q) {
-            $q->where('is_active', true);
-            }])
-            ->withCount('likedUsers')
-            ->withExists(['likedUsers as is_liked' => function ($q) {
-                $q->where('user_id', auth()->id());
-            }])
-        );
+        // 必要なリレーションをロード
+        $trainer->load([
+            'user',
+            'areas',
+            'categories',
+            'specialities',
+            'plans' => function ($q) {
+                $q->where('is_active', true);
+            }
+        ]);
+
+        // likes 数
+        $trainer->loadCount('likes');
+
+        // ログインユーザーがいいねしているか
+        $trainer->is_liked = auth()->check()
+            ? $trainer->likes()->where('user_id', auth()->id())->exists()
+            : false;
+
+        return response()->json($trainer);
     }
 }
