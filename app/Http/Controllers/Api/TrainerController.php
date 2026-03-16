@@ -73,14 +73,12 @@ class TrainerController extends Controller
     }
 
     // トレーナーの情報を変更するメソッド
-    public function update(Request $request, Trainer $trainer)
+    public function update(Request $request)
     {
-        if (auth()->id() !== $trainer->user_id) {
-            abort(403);
-        }
+        $trainer = Trainer::where('user_id', auth()->id())->firstOrFail();
 
         $validated = $request->validate([
-            'name' => 'required|string|max:255',
+            'name' => 'required|string|max:255', // usersテーブル用
             'tel' => 'nullable|string',
             'birth' => 'nullable|date',
             'record' => 'nullable|string',
@@ -94,8 +92,14 @@ class TrainerController extends Controller
             'profile_image' => 'nullable|image|max:2048', // 2MBまで
         ]);
 
-        // 基本情報更新
-        $trainer->update($validated);
+        // 
+        $trainer->user->update(['name' => $validated['name'],]);
+
+        // トレーナーテーブル更新
+        $trainerFields = collect($validated)
+            ->except(['name', 'areas_ids', 'categories_ids', 'specialities_ids'])
+            ->toArray();
+        $trainer->update($trainerFields);
 
         // リレーション更新
         $trainer->areas()->sync($validated['areas_ids']);
@@ -118,27 +122,25 @@ class TrainerController extends Controller
         }
 
         return response()->json(
-            $trainer->load(['areas', 'categories', 'specialities'])
+            $trainer->load(['user', 'areas', 'categories', 'specialities'])
         );    
     }
 
     // トレーナーの情報を削除するメソッド
-    public function destroy(Trainer $trainer)
+    public function destroy()
     {
-        if (auth()->id() !== $trainer->user_id) {
-            abort(403);
-        }
-        
+        $trainer = Trainer::where('user_id', auth()->id())->firstOrFail();
+
         $trainer->delete();
+
         return response()->json(null, 204);
     }
-
     // トレーナーを検索して一覧を取得するメソッド
     public function index(Request $request)
     {
         // SQLクエリを構築するためのクエリビルダを作成
         $query = Trainer::query()
-            ->with(['user', 'areas', 'categories', 'specialities'])
+            ->with(['user', 'areas', 'categories', 'specialities', 'plans'])
             ->withCount('likes');
 
         // area_idが空でない場合は、areasテーブルとのリレーションの中で条件を満たすTrainerを絞り込む
@@ -161,12 +163,22 @@ class TrainerController extends Controller
             });
         }
 
+        // plan_idが空でない場合は、plansテーブルとのリレーションの中で条件を満たすTrainerを絞り込む
+        if ($request->filled('plan_id')) {
+            $query->whereHas('plans', function ($q) use ($request) {
+                $q->where('plans.id', $request->plan_id);
+            });
+        }
+
         // キーワードがある場合は、nameまたはrecordにキーワードが含まれるTrainerを絞り込む
         if ($request->filled('keyword')) {
             $query->where(function ($q) use ($request) {
-                $q->where('name', 'like', '%' . $request->keyword . '%')
-                  ->orWhere('record', 'like', '%' . $request->keyword . '%');
-        });
+                $q->where('record', 'like', '%' . $request->keyword . '%')
+
+                ->orWhereHas('user', function ($sub) use ($request) {
+                    $sub->where('name', 'like', '%' . $request->keyword . '%');
+                });
+            });
         }
         // クエリを実行して、関連するareas、categories、specialities、planのデータも一緒に取得し、10件ずつページネーションする
         return $query
@@ -206,5 +218,33 @@ class TrainerController extends Controller
             : false;
 
         return response()->json($trainer);
+    }
+
+    public function profile()
+    {
+        // 認証ユーザーを定義
+        $user = auth() -> user();
+        // 未認証の場合は401エラー
+        if (!$user) {
+            return response()->json(['error' => 'Unauthenticated'], 401);
+        }
+
+        // 認証ユーザーのトレーナーテーブルと以下のテーブルの情報をtrainerに代入する
+        $trainer = $user->trainer()->with([
+            'user',
+            'areas.city.prefecture',
+            'categories',
+            'specialities',
+            'plans' => function ($q) {
+                $q->where('is_active', true);
+            }
+        ])->first();
+
+        // なければ404エラー
+        if (!$trainer) {
+            return response()->json(['error' => 'Trainer not found'], 404);
+        }
+
+        return response()->json($trainer);    
     }
 }

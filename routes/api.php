@@ -41,23 +41,24 @@ Route::get('/specialities', [SpecialityController::class, 'index']);
 
 // トレーナー一覧APIのルート
 Route::get('/trainers', [TrainerController::class, 'index']);
-// 特定のトレーナーの詳細APIのルート
-Route::get('/trainers/{trainer}', [TrainerController::class, 'show']);
-
 
 // トレーナー関連のAPIルートは、認証されたユーザーのみアクセス可能にするため、auth:sanctumミドルウェアでグループ化
 Route::middleware('auth:sanctum')->group(function () {
 
     Route::post('/trainers', [TrainerController::class, 'store']);
+ 
+    Route::get('/trainers/profile', [TrainerController::class, 'profile']);
 
-    Route::put('/trainers/{trainer}', [TrainerController::class, 'update']);
+    Route::put('/trainers/profile', [TrainerController::class, 'update']);
 
-    Route::delete('/trainers/{trainer}', [TrainerController::class, 'destroy']);
+    Route::delete('/trainers/profile', [TrainerController::class, 'destroy']);
 
     // トレーナーのプラン作成APIのルート
-    Route::post('/trainers/{trainer}/plans', [PlanController::class, 'store']);
-    Route::patch('trainers/{trainer}/plans/{plan}', [PlanController::class, 'update']);
-    Route::delete('trainers/{trainer}/plans/{plan}', [PlanController::class, 'destroy']);
+    Route::post('/plans', [PlanController::class, 'store']);
+    Route::get('/plans', [PlanController::class, 'index']);
+    Route::get('/plans/{plan}', [PlanController::class, 'show']);
+    Route::patch('/plans/{plan}', [PlanController::class, 'update']);
+    Route::delete('/plans/{plan}', [PlanController::class, 'destroy']);
     // 予約関連のAPIルート
     Route::post('trainers/{trainer}/plans/{plan}/reservations', [ReservationController::class, 'store']); // 予約作成
     Route::get('/reservations', [ReservationController::class, 'index']); // 自分の予約一覧
@@ -69,3 +70,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/trainers/{trainer}/like', [TrainerLikeController::class, 'store'])->name('trainer.like'); // トレーナーにいいね
     Route::delete('/trainers/{trainer}/like', [TrainerLikeController::class, 'destroy'])->name('trainer.unlike'); // トレーナーのいいねを解除
 });
+
+// 特定のトレーナーの詳細APIのルート
+Route::get('/trainers/{trainer}', [TrainerController::class, 'show']);
