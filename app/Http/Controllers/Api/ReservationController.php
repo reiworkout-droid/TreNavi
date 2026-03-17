@@ -10,38 +10,58 @@ use App\Models\Reservation;
 
 class ReservationController extends Controller
 {
-    //
-    public function store(Request $request, Trainer $trainer, Plan $plan)
+    // 作成
+    public function store(Request $request)
     {
         $data = $request->validate([
-            'date' => 'required|date|after:now',
+            'plan_id' => 'required|exists:plans,id',
+            'reserver_at' => 'required|date|after:now',
         ]);
+
+        $plan = Plan::findOrFail($data['plan_id']);
 
         $reservation = Reservation::create([
             'user_id' => auth()->id(),
-            'trainer_id' => $trainer->id,
+            'trainer_id' => $plan->trainer_id,
             'plan_id' => $plan->id,
-            'reserver_at' => $data['date'], // ← date を reserver_at にセット
-            'price_snapshot' => $plan->price, // 予約時点の価格も必須なら追加
+            'reserver_at' => $data['reserver_at'], // ← 修正
+            'price_snapshot' => $plan->price,
         ]);
+
         return response()->json($reservation, 201);
     }
 
-    // 自分の予約一覧を取得するAPI
-    public function index(Request $request)
+    // ユーザーの予約一覧
+    public function index()
     {
-        // 認証されたユーザーの予約を取得
-        $reservation = Reservation::with(['trainer', 'plan'])
+        $reservations = Reservation::with(['trainer.user', 'plan'])
             ->where('user_id', auth()->id())
-            ->orderBy('reserver_at', 'desc')
+            ->where('reserver_at', '>', now()->timezone('Asia/Tokyo'))
+            ->where('status', '!=', 'canceled')
+            ->orderBy('reserver_at', 'asc')
             ->get();
+
+        return response()->json($reservations);
+    }
+
+    // 次の予約
+    public function next()
+    {
+        $reservation = Reservation::with(['plan', 'trainer.user'])
+            ->where('user_id', auth()->id())
+            ->where('reserver_at', '>', now()->timezone('Asia/Tokyo'))
+            ->where('status', '!=', 'canceled')
+            ->orderBy('reserver_at', 'asc')
+            ->first();
 
         return response()->json($reservation);
     }
 
-    // トレーナーが自分の予約を確認するAPI
-    public function trainerReservations(Trainer $trainer)
+    // トレーナーの予約一覧
+    public function trainerReservations()
     {
+        $trainer = auth()->user()->trainer;
+
         $reservations = Reservation::with(['user', 'plan'])
             ->where('trainer_id', $trainer->id)
             ->orderBy('reserver_at', 'desc')
@@ -50,42 +70,31 @@ class ReservationController extends Controller
         return response()->json($reservations);
     }
 
-    public function show(Trainer $trainer, Plan $plan, Reservation $reservation)
+    // 詳細
+    public function show(Reservation $reservation)
     {
-        // URL の trainer/plan に紐付いているか確認
-        if ($reservation->trainer_id !== $trainer->id || $reservation->plan_id !== $plan->id) {
-            abort(404);
-        }
-
         return response()->json($reservation);
     }
 
-    public function update(Request $request, Trainer $trainer, Plan $plan, Reservation $reservation)
+    // ステータス更新
+    public function update(Request $request, Reservation $reservation)
     {
-        if ($reservation->trainer_id !== $trainer->id || $reservation->plan_id !== $plan->id) {
-            abort(404);
-        }
-
         $data = $request->validate([
             'status' => 'required|in:pending,confirmed,canceled',
         ]);
 
         $reservation->update([
-            'status' => $data['status'],
+            'status' => $data['status']
         ]);
 
         return response()->json($reservation);
     }
 
-    public function destroy(Trainer $trainer, Plan $plan, Reservation $reservation)
+    // 削除（キャンセル）
+    public function destroy(Reservation $reservation)
     {
-        // trainer/plan が一致するか確認
-        if ($reservation->trainer_id !== $trainer->id || $reservation->plan_id !== $plan->id) {
-            abort(404);
-        }
-
         $reservation->delete();
 
-        return response()->json(['message' => 'Reservation deleted successfully']);
+        return response()->json(['message'=>'deleted']);
     }
 }

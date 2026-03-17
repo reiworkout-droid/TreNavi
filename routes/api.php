@@ -56,16 +56,16 @@ Route::middleware('auth:sanctum')->group(function () {
     // トレーナーのプラン作成APIのルート
     Route::post('/plans', [PlanController::class, 'store']);
     Route::get('/plans', [PlanController::class, 'index']);
-    Route::get('/plans/{plan}', [PlanController::class, 'show']);
     Route::patch('/plans/{plan}', [PlanController::class, 'update']);
     Route::delete('/plans/{plan}', [PlanController::class, 'destroy']);
     // 予約関連のAPIルート
-    Route::post('trainers/{trainer}/plans/{plan}/reservations', [ReservationController::class, 'store']); // 予約作成
-    Route::get('/reservations', [ReservationController::class, 'index']); // 自分の予約一覧
-    Route::get('trainers/{trainer}/reservations', [ReservationController::class, 'trainerReservations']); // トレーナーが自分の予約を確認
-    Route::get('trainers/{trainer}/plans/{plan}/reservations/{reservation}', [ReservationController::class, 'show']); // 詳細
-    Route::patch('trainers/{trainer}/plans/{plan}/reservations/{reservation}', [ReservationController::class, 'update']); // ステータス更新
-    Route::delete('trainers/{trainer}/plans/{plan}/reservations/{reservation}', [ReservationController::class, 'destroy']); // キャンセル
+    Route::post('/reservations', [ReservationController::class, 'store']);
+    Route::get('/reservations', [ReservationController::class, 'index']);
+    Route::get('/reservations/next', [ReservationController::class, 'next']);
+    Route::get('/trainer/reservations', [ReservationController::class, 'trainerReservations']); // トレーナーが自分の予約を確認
+    Route::get('/reservations/{reservation}}', [ReservationController::class, 'show']); // 詳細
+    Route::patch('/reservations/{reservation}', [ReservationController::class, 'update']); // ステータス更新
+    Route::delete('/reservations/{reservation}', [ReservationController::class, 'destroy']); // キャンセル
     // いいね機能のAPIルート
     Route::post('/trainers/{trainer}/like', [TrainerLikeController::class, 'store'])->name('trainer.like'); // トレーナーにいいね
     Route::delete('/trainers/{trainer}/like', [TrainerLikeController::class, 'destroy'])->name('trainer.unlike'); // トレーナーのいいねを解除
