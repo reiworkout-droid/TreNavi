@@ -79,6 +79,13 @@ class ReservationController extends Controller
     // ステータス更新
     public function update(Request $request, Reservation $reservation)
     {
+        $trainerId = auth()->user()->trainer?->id; // ログインユーザーの trainer ID
+
+        if ($reservation->trainer_id !== $trainerId) {
+            return response()->json(['message' => '権限がありません'], 403);
+        }
+        
+        // 権限がある場合のみ更新
         $data = $request->validate([
             'status' => 'required|in:pending,confirmed,canceled',
         ]);
@@ -87,7 +94,7 @@ class ReservationController extends Controller
             'status' => $data['status']
         ]);
 
-        return response()->json($reservation);
+        return response()->json($reservation); // 更新後の予約情報を返す
     }
 
     // 削除（キャンセル）

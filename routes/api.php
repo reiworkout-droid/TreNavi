@@ -41,6 +41,8 @@ Route::get('/specialities', [SpecialityController::class, 'index']);
 
 // トレーナー一覧APIのルート
 Route::get('/trainers', [TrainerController::class, 'index']);
+// プラン一覧のAPIルート
+Route::get('/plans', [PlanController::class, 'index']);
 
 // トレーナー関連のAPIルートは、認証されたユーザーのみアクセス可能にするため、auth:sanctumミドルウェアでグループ化
 Route::middleware('auth:sanctum')->group(function () {
@@ -55,7 +57,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // トレーナーのプラン作成APIのルート
     Route::post('/plans', [PlanController::class, 'store']);
-    Route::get('/plans', [PlanController::class, 'index']);
+    Route::get('/plans/{plan}', [PlanController::class, 'show']);
     Route::patch('/plans/{plan}', [PlanController::class, 'update']);
     Route::delete('/plans/{plan}', [PlanController::class, 'destroy']);
     // 予約関連のAPIルート
@@ -63,7 +65,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/reservations', [ReservationController::class, 'index']);
     Route::get('/reservations/next', [ReservationController::class, 'next']);
     Route::get('/trainer/reservations', [ReservationController::class, 'trainerReservations']); // トレーナーが自分の予約を確認
-    Route::get('/reservations/{reservation}}', [ReservationController::class, 'show']); // 詳細
+    Route::get('/reservations/{reservation}', [ReservationController::class, 'show']); // 詳細
     Route::patch('/reservations/{reservation}', [ReservationController::class, 'update']); // ステータス更新
     Route::delete('/reservations/{reservation}', [ReservationController::class, 'destroy']); // キャンセル
     // いいね機能のAPIルート
