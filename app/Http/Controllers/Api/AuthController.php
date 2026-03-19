@@ -55,14 +55,24 @@ class AuthController extends Controller
     $request->session()->regenerate();
 
     return response()->json([
-        'user' => Auth::user()
+        'user' => Auth::user()->load('trainer')
     ]);
 }
   // 認証されたユーザーのアクセストークンを削除してログアウトする
   public function logout(Request $request)
   {
-    $request->user()->currentAccessToken()->delete();
+    Auth::guard('web')->logout(); // セッションログアウト
 
-    return response()->json(['message' => 'Successfully logged out']);
+    $request->session()->invalidate();
+    $request->session()->regenerateToken();
+
+    return response()->json(['message' => 'ログアウトしました']);
+  }
+
+  public function user(Request $request)
+  {
+      $user = User::with('trainer')->find($request->user()->id);
+
+      return response()->json($user);
   }
 }

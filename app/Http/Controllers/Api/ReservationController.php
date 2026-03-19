@@ -44,6 +44,17 @@ class ReservationController extends Controller
         return response()->json($reservations);
     }
 
+    // 過去の予約一覧
+    public function past()
+    {
+        return Reservation::with(['trainer.user','plan'])
+            ->where('user_id', auth()->id())
+            ->where('reserver_at', '<=', now())
+            ->where('status', '!=', 'canceled')
+            ->orderBy('reserver_at', 'desc')
+            ->get();
+    }
+
     // 次の予約
     public function next()
     {

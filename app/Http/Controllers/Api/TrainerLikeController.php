@@ -16,7 +16,7 @@ public function store(Trainer $trainer)
     // いいねを追加（重複は無視）
     $trainer->likes()->syncWithoutDetaching(auth()->id());
     return response()->json([
-        'message' => 'Trainer liked successfully'
+        'message' => 'いいねしました'
     ]);
 }
     /**
@@ -28,14 +28,17 @@ public function store(Trainer $trainer)
         $trainer->likes()->detach(auth()->id());
 
         return response()->json([
-            'message' => 'Trainer unliked successfully'
+            'message' => 'いいねを取り消しました'
         ]);
     }
 
     public function index()
     {
-        // 認証ユーザーがいいねしたトレーナーを取得
-        $likedTrainers = auth()->user()->likedTrainers()->get();
+        $likedTrainers = auth()->user()
+            ->likedTrainers()
+            ->with(['user', 'plans']) // ← 関連データ
+            ->withCount('likes')      // ← いいね数
+            ->get();
 
         return response()->json($likedTrainers);
     }
