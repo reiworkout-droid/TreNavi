@@ -24,9 +24,7 @@ Route::post('/login', [AuthController::class, 'login']);
 Route::middleware('auth:sanctum')->post('/logout', [AuthController::class, 'logout']);
 
 // 認証されたユーザーの情報を取得するAPIのルート
-Route::middleware(['auth:sanctum'])->get('/user', function (Request $request) {
-    return $request->user();
-});
+Route::middleware(['auth:sanctum'])->get('/user', [AuthController::class, 'user']);
 
 Route::get('/ping', function () {
     return ['status' => 'ok'];
@@ -63,12 +61,14 @@ Route::middleware('auth:sanctum')->group(function () {
     // 予約関連のAPIルート
     Route::post('/reservations', [ReservationController::class, 'store']);
     Route::get('/reservations', [ReservationController::class, 'index']);
+    Route::get('/reservations/past', [ReservationController::class, 'past']);
     Route::get('/reservations/next', [ReservationController::class, 'next']);
     Route::get('/trainer/reservations', [ReservationController::class, 'trainerReservations']); // トレーナーが自分の予約を確認
     Route::get('/reservations/{reservation}', [ReservationController::class, 'show']); // 詳細
     Route::patch('/reservations/{reservation}', [ReservationController::class, 'update']); // ステータス更新
     Route::delete('/reservations/{reservation}', [ReservationController::class, 'destroy']); // キャンセル
     // いいね機能のAPIルート
+    Route::get('/trainers/liked', [TrainerLikeController::class, 'index']);
     Route::post('/trainers/{trainer}/like', [TrainerLikeController::class, 'store'])->name('trainer.like'); // トレーナーにいいね
     Route::delete('/trainers/{trainer}/like', [TrainerLikeController::class, 'destroy'])->name('trainer.unlike'); // トレーナーのいいねを解除
 });

@@ -60,8 +60,11 @@ class User extends Authenticatable
         return $this->hasMany(Reservation::class);
     }
 
-    public function likes() {
-        return $this->belongsToMany(Trainer::class, 'trainer_user')->withTimestamps();
+    // User.php
+    public function likedTrainers()
+    {
+        return $this->belongsToMany(Trainer::class, 'trainer_user', 'user_id', 'trainer_id')
+                    ->withTimestamps();
     }
 
     public function roles() {
