@@ -71,4 +71,9 @@ class Trainer extends Model
     public function likes() {
         return $this->belongsToMany(User::class, 'trainer_user')->withTimestamps();
     }
+
+    public function reviews()
+    {
+        return $this->hasMany(Review::class);
+    }
 }

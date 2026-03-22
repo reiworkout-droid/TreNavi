@@ -13,6 +13,8 @@ use App\Http\Controllers\Api\CityController;
 use App\Http\Controllers\Api\AreaController;
 use App\Http\Controllers\Api\CategoryController;
 use App\Http\Controllers\Api\SpecialityController;
+use App\Http\Controllers\Api\ReviewController;
+use App\Http\Controllers\Api\UserController;
 
 // 登録APIのルート
 Route::post('/register', [AuthController::class, 'register']);
@@ -71,7 +73,14 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/trainers/liked', [TrainerLikeController::class, 'index']);
     Route::post('/trainers/{trainer}/like', [TrainerLikeController::class, 'store'])->name('trainer.like'); // トレーナーにいいね
     Route::delete('/trainers/{trainer}/like', [TrainerLikeController::class, 'destroy'])->name('trainer.unlike'); // トレーナーのいいねを解除
+    // 口コミ関連のAPIルート
+    Route::post('/reviews', [ReviewController::class, 'store']);
+    Route::get('/reviews/{review}', [ReviewController::class, 'show']);
+    Route::get('/reviews/summary/{trainerId}', [ReviewController::class, 'summary']);
+    // 診断ツール
+    Route::post('/diagnosis', [UserController::class, 'diagnosis']);
+    Route::get('/user', [AuthController::class, 'user']);
 });
 
 // 特定のトレーナーの詳細APIのルート
-Route::get('/trainers/{trainer}', [TrainerController::class, 'show']);
+Route::get('/user', [AuthController::class, 'user']);
