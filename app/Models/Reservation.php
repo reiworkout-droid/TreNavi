@@ -34,4 +34,9 @@ class Reservation extends Model
     public function plan() {
         return $this->belongsTo(Plan::class);
     }
+
+    public function review()
+    {
+        return $this->hasOne(Review::class);
+    }
 }

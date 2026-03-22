@@ -34,7 +34,7 @@ class ReservationController extends Controller
     // ユーザーの予約一覧
     public function index()
     {
-        $reservations = Reservation::with(['trainer.user', 'plan'])
+        $reservations = Reservation::with(['trainer.user', 'plan', 'review'])
             ->where('user_id', auth()->id())
             ->where('reserver_at', '>', now()->timezone('Asia/Tokyo'))
             ->where('status', '!=', 'canceled')
@@ -47,7 +47,7 @@ class ReservationController extends Controller
     // 過去の予約一覧
     public function past()
     {
-        return Reservation::with(['trainer.user','plan'])
+        return Reservation::with(['trainer.user','plan', 'review'])
             ->where('user_id', auth()->id())
             ->where('reserver_at', '<=', now())
             ->where('status', '!=', 'canceled')
