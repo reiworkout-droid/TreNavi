@@ -42,4 +42,27 @@ public function store(Trainer $trainer)
 
         return response()->json($likedTrainers);
     }
+
+    public function count($trainerId)
+    {
+        $trainer = Trainer::find($trainerId);
+        if (!$trainer) {
+            return response()->json(['message' => 'Trainer not found'], 404);
+        }
+
+        $count = $trainer->likes()->count();
+
+        return response()->json(['count' => $count]);
+    }
+
+    public function show(Trainer $trainer)
+    {
+        $user = auth()->user();
+
+        return response()->json([
+            'is_liked' => $trainer->likes()
+                ->where('user_id', $user->id)
+                ->exists(),
+        ]);
+    }
 }
