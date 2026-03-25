@@ -3,28 +3,21 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-// リクエストを使用するためにRequestクラスをインポート
 use Illuminate\Http\Request;
 use App\Models\Trainer;
-// トランザクションを使用するためにDBファサードをインポート
 use Illuminate\Support\Facades\DB;
-// ストレージを使用するためにStorageファサードをインポート
 use Illuminate\Support\Facades\Storage;
 
 class TrainerController extends Controller
 {
-
     public function store(Request $request)
     {
-        // 認証されたユーザーを取得
         $user = auth()->user();
         if (!$user) {
             return response()->json(['error' => 'Unauthenticated'], 401);
         }
 
-        // リクエストのバリデーション
         $validated = $request->validate([
-            // 'name' => 'required|string|max:255',
             'tel' => 'nullable|string',
             'birth' => 'nullable|date',
             'record' => 'nullable|string',
@@ -35,50 +28,44 @@ class TrainerController extends Controller
             'categories_ids.*' => 'exists:categories,id',
             'specialities_ids' => 'required|array',
             'specialities_ids.*' => 'exists:specialities,id',
-            'profile_image' => 'nullable|image|max:2048', // 2MBまで
+            'profile_image' => 'nullable|image|max:2048',
         ]);
 
-        // トランザクションを使用して、トレーナーの作成と関連付けを一括で行う
         return DB::transaction(function () use ($validated, $request) {
-            // トレーナーの作成
             $trainer = Trainer::create([
-                'user_id' => auth()->id(), // 認証されたユーザーのIDを取得
-                // 'name' => $validated['name'],
+                'user_id' => auth()->id(),
                 'tel' => $validated['tel'] ?? null,
                 'birth' => $validated['birth'] ?? null,
                 'record' => $validated['record'] ?? null,
                 'bio' => $validated['bio'] ?? null,
             ]);
 
-            // 画像があれば保存
             if ($request->hasFile('profile_image')) {
-                // アップロードされた画像をStorageに保存し、そのパスを取得
-                $path = $request->file('profile_image')
-                                ->store('trainers', 'public');
-                // 保存した画像のパスをトレーナーのprofile_imageカラムに保存
-                $trainer->update([
-                    'profile_image' => $path
-                ]);
+                $path = $request->file('profile_image')->store('trainers', 'public');
+                $trainer->update(['profile_image' => $path]);
             }
 
-            // belongsToManyのリレーションを使用して、areasとcategoriesの関連付けを行う
             $trainer->areas()->attach($validated['areas_ids']);
             $trainer->categories()->attach($validated['categories_ids']);
             $trainer->specialities()->attach($validated['specialities_ids']);
 
+            $trainer->load(['areas', 'categories', 'specialities']);
 
-            // 作成したトレーナーの情報とリレーションデータを一緒に返す
-            return response()->json($trainer->load(['areas', 'categories', 'specialities']), 201);
+            // ⭐ 画像URL追加
+            $trainer->profile_image_url = $trainer->profile_image
+                ? asset('storage/' . $trainer->profile_image)
+                : null;
+
+            return response()->json($trainer, 201);
         });
     }
 
-    // トレーナーの情報を変更するメソッド
     public function update(Request $request)
     {
         $trainer = Trainer::where('user_id', auth()->id())->firstOrFail();
 
         $validated = $request->validate([
-            'name' => 'required|string|max:255', // usersテーブル用
+            'name' => 'required|string|max:255',
             'tel' => 'nullable|string',
             'birth' => 'nullable|date',
             'record' => 'nullable|string',
@@ -89,162 +76,166 @@ class TrainerController extends Controller
             'categories_ids.*' => 'exists:categories,id',
             'specialities_ids' => 'required|array',
             'specialities_ids.*' => 'exists:specialities,id',
-            'profile_image' => 'nullable|image|max:2048', // 2MBまで
+            'profile_image' => 'nullable|image|max:2048',
         ]);
 
-        // 
-        $trainer->user->update(['name' => $validated['name'],]);
+        $trainer->user->update([
+            'name' => $validated['name'],
+        ]);
 
-        // トレーナーテーブル更新
-        $trainerFields = collect($validated)
-            ->except(['name', 'areas_ids', 'categories_ids', 'specialities_ids'])
-            ->toArray();
-        $trainer->update($trainerFields);
+        $trainer->update(
+            collect($validated)
+                ->except(['name', 'areas_ids', 'categories_ids', 'specialities_ids'])
+                ->toArray()
+        );
 
-        // リレーション更新
         $trainer->areas()->sync($validated['areas_ids']);
         $trainer->categories()->sync($validated['categories_ids']);
         $trainer->specialities()->sync($validated['specialities_ids']);
 
-        // 画像更新
         if ($request->hasFile('profile_image')) {
-
             if ($trainer->profile_image) {
                 Storage::disk('public')->delete($trainer->profile_image);
             }
 
-            $path = $request->file('profile_image')
-                            ->store('trainers', 'public');
-
-            $trainer->update([
-                'profile_image' => $path
-            ]);
+            $path = $request->file('profile_image')->store('trainers', 'public');
+            $trainer->update(['profile_image' => $path]);
         }
 
-        return response()->json(
-            $trainer->load(['user', 'areas', 'categories', 'specialities'])
-        );    
+        $trainer->load(['user', 'areas', 'categories', 'specialities']);
+
+        // ⭐ 画像URL追加
+        $trainer->profile_image_url = $trainer->profile_image
+            ? asset('storage/' . $trainer->profile_image)
+            : null;
+
+        return response()->json($trainer);
     }
 
-    // トレーナーの情報を削除するメソッド
     public function destroy()
     {
         $trainer = Trainer::where('user_id', auth()->id())->firstOrFail();
-
         $trainer->delete();
 
         return response()->json(null, 204);
     }
-    // トレーナーを検索して一覧を取得するメソッド
+
     public function index(Request $request)
     {
-        // SQLクエリを構築するためのクエリビルダを作成
         $query = Trainer::query()
             ->with(['user', 'areas', 'categories', 'specialities', 'plans'])
-            ->withCount('likes');
+            ->withCount('likes')
+            ->withAvg('reviews as style_avg', 'style')
+            ->withAvg('reviews as talk_avg', 'talk')
+            ->withAvg('reviews as logic_avg', 'logic')
+            ->withAvg('reviews as pace_avg', 'pace')
+            ->withAvg('reviews as distance_avg', 'distance');
 
-        // area_idが空でない場合は、areasテーブルとのリレーションの中で条件を満たすTrainerを絞り込む
+        // フィルター
         if ($request->filled('area_id')) {
-            $query->whereHas('areas', function ($q) use ($request) {
-                $q->where('areas.id', $request->area_id);
-            });
+            $query->whereHas('areas', fn($q) =>
+                $q->where('areas.id', $request->area_id)
+            );
         }
-        // category_idが空でない場合は、categoriesテーブルとのリレーションの中で条件を満たすTrainerを絞り込む
+
         if ($request->filled('category_id')) {
-            $query->whereHas('categories', function ($q) use ($request) {
-                $q->where('categories.id', $request->category_id);
-            });
+            $query->whereHas('categories', fn($q) =>
+                $q->where('categories.id', $request->category_id)
+            );
         }
 
-        // speciality_idが空でない場合は、specialitiesテーブルとのリレーションの中で条件を満たすTrainerを絞り込む
         if ($request->filled('speciality_id')) {
-            $query->whereHas('specialities', function ($q) use ($request) {
-                $q->where('specialities.id', $request->speciality_id);
-            });
+            $query->whereHas('specialities', fn($q) =>
+                $q->where('specialities.id', $request->speciality_id)
+            );
         }
 
-        // plan_idが空でない場合は、plansテーブルとのリレーションの中で条件を満たすTrainerを絞り込む
         if ($request->filled('plan_id')) {
-            $query->whereHas('plans', function ($q) use ($request) {
-                $q->where('plans.id', $request->plan_id);
-            });
+            $query->whereHas('plans', fn($q) =>
+                $q->where('plans.id', $request->plan_id)
+            );
         }
 
-        // キーワードがある場合は、nameまたはrecordにキーワードが含まれるTrainerを絞り込む
         if ($request->filled('keyword')) {
             $query->where(function ($q) use ($request) {
                 $q->where('record', 'like', '%' . $request->keyword . '%')
-
-                ->orWhereHas('user', function ($sub) use ($request) {
-                    $sub->where('name', 'like', '%' . $request->keyword . '%');
-                });
+                  ->orWhereHas('user', fn($sub) =>
+                      $sub->where('name', 'like', '%' . $request->keyword . '%')
+                  );
             });
         }
-        // クエリを実行して、関連するareas、categories、specialities、planのデータも一緒に取得し、10件ずつページネーションする
-        return $query
-            ->withMin(['plans' => function ($q) {
-                $q->where('is_active', true);
-            }], 'price')
-            ->when(auth()->check(), function ($q) {
-                $q->withExists([
-                    'likes as is_liked' => function ($subQuery) {
-                        $subQuery->where('user_id', auth()->id());
-                    }
-                ]);
-            })
+
+        $paginator = $query
+            ->withMin(['plans' => fn($q) => $q->where('is_active', true)], 'price')
             ->paginate(10);
+
+        // ⭐ ここが今回の重要修正（withExistsやめた）
+        $paginator->getCollection()->transform(function ($trainer) {
+
+            // is_liked
+            $trainer->is_liked = auth()->check()
+                ? $trainer->likes()->where('user_id', auth()->id())->exists()
+                : false;
+
+            // 画像URL
+            $trainer->profile_image_url = $trainer->profile_image
+                ? asset('storage/' . $trainer->profile_image)
+                : null;
+
+            return $trainer;
+        });
+
+        return $paginator;
     }
 
-    // トレーナーの詳細情報を取得するメソッド
     public function show(Trainer $trainer)
     {
-        // 必要なリレーションをロード
         $trainer->load([
             'user',
             'areas',
             'categories',
             'specialities',
-            'plans' => function ($q) {
-                $q->where('is_active', true);
-            }
+            'plans' => fn($q) => $q->where('is_active', true),
         ]);
 
-        // likes 数
         $trainer->loadCount('likes');
 
-        // ログインユーザーがいいねしているか
         $trainer->is_liked = auth()->check()
             ? $trainer->likes()->where('user_id', auth()->id())->exists()
             : false;
+
+        // ⭐ 画像URL
+        $trainer->profile_image_url = $trainer->profile_image
+            ? asset('storage/' . $trainer->profile_image)
+            : null;
 
         return response()->json($trainer);
     }
 
     public function profile()
     {
-        // 認証ユーザーを定義
-        $user = auth() -> user();
-        // 未認証の場合は401エラー
+        $user = auth()->user();
         if (!$user) {
             return response()->json(['error' => 'Unauthenticated'], 401);
         }
 
-        // 認証ユーザーのトレーナーテーブルと以下のテーブルの情報をtrainerに代入する
         $trainer = $user->trainer()->with([
             'user',
             'areas.city.prefecture',
             'categories',
             'specialities',
-            'plans' => function ($q) {
-                $q->where('is_active', true);
-            }
+            'plans' => fn($q) => $q->where('is_active', true),
         ])->first();
 
-        // なければ404エラー
         if (!$trainer) {
             return response()->json(['error' => 'Trainer not found'], 404);
         }
 
-        return response()->json($trainer);    
+        // ⭐ 画像URL
+        $trainer->profile_image_url = $trainer->profile_image
+            ? asset('storage/' . $trainer->profile_image)
+            : null;
+
+        return response()->json($trainer);
     }
 }
