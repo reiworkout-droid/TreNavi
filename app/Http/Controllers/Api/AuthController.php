@@ -36,6 +36,7 @@ class AuthController extends Controller
     return response()->json([
       'access_token' => $token,
       'token_type' => 'Bearer',
+      'user' => $user,
     ]);
   }
   // リクエストを検証してユーザーを認証し、アクセストークンを返す
@@ -52,33 +53,32 @@ class AuthController extends Controller
       ], 401);
     }
 
-    $request->session()->regenerate();
+    $user = User::where('email', $request->email)
+        ->with('trainer')
+        ->first();
+
+    if (!$user) {
+      return response()->json(['message' => 'ユーザー取得失敗'], 500);
+    }
+
+    $token = $user->createToken('auth_token')->plainTextToken;
 
     return response()->json([
-        'user' => Auth::user()->load('trainer')
+      'access_token' => $token,
+      'token_type' => 'Bearer',
+      'user' => $user,
     ]);
 }
   // 認証されたユーザーのアクセストークンを削除してログアウトする
   public function logout(Request $request)
   {
-    Auth::guard('web')->logout(); // セッションログアウト
-
-    $request->session()->invalidate();
-    $request->session()->regenerateToken();
-
-    return response()->json(['message' => 'ログアウトしました']);
-  }
+    $request->user()->currentAccessToken()->delete();
+    return response()->json(['message'=>'ログアウトしました']);  }
 
   public function user(Request $request)
   {
-    $user = User::with('trainer')->find($request->user()->id);
-    
-    return response()->json([
-        'id' => $user->id,
-        'name' => $user->name,
-        'email' => $user->email,
-        'user_type' => $user->user_type, 
-        'trainer' => $user->trainer,
-    ]);
+      return response()->json(
+          $request->user()->load('trainer') // ← これ必須
+      );
   }
 }
