@@ -22,12 +22,6 @@ Route::post('/register', [AuthController::class, 'register']);
 // ログインAPIのルート
 Route::post('/login', [AuthController::class, 'login']);
 
-// ログアウトAPIのルート
-Route::middleware('auth:sanctum')->post('/logout', [AuthController::class, 'logout']);
-
-// 認証されたユーザーの情報を取得するAPIのルート
-Route::middleware(['auth:sanctum'])->get('/user', [AuthController::class, 'user']);
-
 Route::get('/ping', function () {
     return ['status' => 'ok'];
 });
@@ -43,14 +37,19 @@ Route::get('/specialities', [SpecialityController::class, 'index']);
 Route::get('/trainers', [TrainerController::class, 'index']);
 // プラン一覧のAPIルート
 Route::get('/plans', [PlanController::class, 'index']);
-// ユーザーの詳細APIのルート
-Route::get('/user', [AuthController::class, 'user']);
 // トレーナーの口コミ平均
 Route::get('/reviews/summary/{trainerId}', [ReviewController::class, 'summary']);
 
+Route::get('/trainers/{trainer}/like/count', [TrainerLikeController::class, 'count']);
 
 // トレーナー関連のAPIルートは、認証されたユーザーのみアクセス可能にするため、auth:sanctumミドルウェアでグループ化
 Route::middleware('auth:sanctum')->group(function () {
+    // ユーザーの情報を取得するAPIのルート
+    Route::get('/user', [AuthController::class, 'user']);
+    Route::put('/user', [UserController::class, 'update']);
+
+    // ログアウトAPIのルート
+    Route::post('/logout', [AuthController::class, 'logout']);
 
     Route::post('/trainers', [TrainerController::class, 'store']);
  
@@ -62,6 +61,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // トレーナーのプラン作成APIのルート
     Route::post('/plans', [PlanController::class, 'store']);
+    Route::get('/plans', [PlanController::class, 'index']);
     Route::get('/plans/{plan}', [PlanController::class, 'show']);
     Route::patch('/plans/{plan}', [PlanController::class, 'update']);
     Route::delete('/plans/{plan}', [PlanController::class, 'destroy']);
@@ -77,7 +77,6 @@ Route::middleware('auth:sanctum')->group(function () {
     // いいね機能のAPIルート
     Route::get('/trainers/liked', [TrainerLikeController::class, 'index']);
     Route::get('/trainers/{trainer}/like', [TrainerLikeController::class, 'show']);
-    Route::get('/trainers/{trainer}/like/count', [TrainerLikeController::class, 'count']);
     Route::post('/trainers/{trainer}/like', [TrainerLikeController::class, 'store'])->name('trainer.like'); // トレーナーにいいね
     Route::delete('/trainers/{trainer}/like', [TrainerLikeController::class, 'destroy'])->name('trainer.unlike'); // トレーナーのいいねを解除
     // 口コミ関連のAPIルート
@@ -85,7 +84,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/reviews/{review}', [ReviewController::class, 'show']);
     // 診断ツール
     Route::post('/diagnosis', [UserController::class, 'diagnosis']);
-    Route::get('/user', [AuthController::class, 'user']);
 });
 // 特定のトレーナーの詳細APIのルート
 Route::get('/trainers/{trainer}', [TrainerController::class, 'show']);
