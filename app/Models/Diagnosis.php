@@ -7,8 +7,12 @@ use Illuminate\Database\Eloquent\Model;
 class Diagnosis extends Model
 {
     //
-    // public function user()
-    // {
-    //     return $this->belongsTo(User::class);
-    // }
+    protected $fillable = [
+        'user_id',
+        'style',
+        'talk',
+        'logic',
+        'pace',
+        'distance',
+    ];
 }

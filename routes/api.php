@@ -15,6 +15,7 @@ use App\Http\Controllers\Api\CategoryController;
 use App\Http\Controllers\Api\SpecialityController;
 use App\Http\Controllers\Api\ReviewController;
 use App\Http\Controllers\Api\UserController;
+use App\Http\Controllers\Api\DiagnosisController;
 
 // 登録APIのルート
 Route::post('/register', [AuthController::class, 'register']);
@@ -59,6 +60,9 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::delete('/trainers/profile', [TrainerController::class, 'destroy']);
 
+    // 診断API
+    Route::post('/diagnosis', [DiagnosisController::class, 'store']);
+
     // トレーナーのプラン作成APIのルート
     Route::post('/plans', [PlanController::class, 'store']);
     Route::get('/plans', [PlanController::class, 'index']);
@@ -83,7 +87,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/reviews', [ReviewController::class, 'store']);
     Route::get('/reviews/{review}', [ReviewController::class, 'show']);
     // 診断ツール
-    Route::post('/diagnosis', [UserController::class, 'diagnosis']);
+    // Route::post('/diagnosis', [UserController::class, 'diagnosis']);
 });
 // 特定のトレーナーの詳細APIのルート
 Route::get('/trainers/{trainer}', [TrainerController::class, 'show']);
