@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Trainer;
 use App\Models\Review;
 use App\Models\Reservation;
+use App\Models\User;
 use Illuminate\Http\Request;
 
 class ReviewController extends Controller
@@ -61,5 +62,37 @@ class ReviewController extends Controller
             'pace' => $reviews->avg('pace'),
             'distance' => $reviews->avg('distance'),
         ]);
+    }
+
+    // 口コミ一覧
+    public function index($trainerId)
+    {
+        $reviews = Review::where('trainer_id', $trainerId)
+            ->with([
+                'user:id,name', // 投稿者の名前を取得
+                'user.latestDiagnosis' // 投稿者の診断結果（タイプ）を取得
+            ])
+            ->latest() // 新しい順
+            ->get();
+
+        // フロントエンドで扱いやすいように整形して返す
+        $formattedReviews = $reviews->map(function ($review) {
+            return [
+                'id' => $review->id,
+                'user_name' => $review->user->name,
+                'user_type' => $review->user->latestDiagnosis?->user_type ?? '未診断',
+                'comment' => $review->comment, // もしカラムがあれば
+                'scores' => [
+                    'style' => $review->style,
+                    'talk' => $review->talk,
+                    'logic' => $review->logic,
+                    'pace' => $review->pace,
+                    'distance' => $review->distance,
+                ],
+                'created_at' => $review->created_at->format('Y-m-d'),
+            ];
+        });
+
+        return response()->json($formattedReviews);
     }
 }
