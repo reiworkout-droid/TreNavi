@@ -40,6 +40,8 @@ Route::get('/trainers', [TrainerController::class, 'index']);
 Route::get('/plans', [PlanController::class, 'index']);
 // トレーナーの口コミ平均
 Route::get('/reviews/summary/{trainerId}', [ReviewController::class, 'summary']);
+// トレーナーの口コミ一覧
+Route::get('/trainers/{trainerId}/reviews', [ReviewController::class, 'index']);
 
 Route::get('/trainers/{trainer}/like/count', [TrainerLikeController::class, 'count']);
 
@@ -86,8 +88,6 @@ Route::middleware('auth:sanctum')->group(function () {
     // 口コミ関連のAPIルート
     Route::post('/reviews', [ReviewController::class, 'store']);
     Route::get('/reviews/{review}', [ReviewController::class, 'show']);
-    // 診断ツール
-    // Route::post('/diagnosis', [UserController::class, 'diagnosis']);
 });
 // 特定のトレーナーの詳細APIのルート
 Route::get('/trainers/{trainer}', [TrainerController::class, 'show']);

@@ -70,4 +70,10 @@ class User extends Authenticatable
     public function roles() {
         return $this->belongsToMany(Role::class)->withTimestamps();
     }
+
+    // 最新の診断結果
+    public function latestDiagnosis()
+    {
+        return $this->hasOne(Diagnosis::class)->latestOfMany();
+    }
 }
