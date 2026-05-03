@@ -16,6 +16,7 @@ class Review extends Model
         'logic',
         'pace',
         'distance',
+        'comment',
     ];
     
     public function trainer()
