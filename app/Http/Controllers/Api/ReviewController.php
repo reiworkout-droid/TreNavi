@@ -23,6 +23,7 @@ class ReviewController extends Controller
             'logic' => 'required|integer|min:1|max:5',
             'pace' => 'required|integer|min:1|max:5',
             'distance' => 'required|integer|min:1|max:5',
+            'comment' => 'nullable|string|max:200',
         ]);
 
         $reservation = Reservation::findOrFail($request->reservation_id);
@@ -37,6 +38,7 @@ class ReviewController extends Controller
             'logic' => $request->logic,
             'pace' => $request->pace,
             'distance' => $request->distance,
+            'comment' => $request->comment,
         ]);
 
         return response()->json($review, 201);
