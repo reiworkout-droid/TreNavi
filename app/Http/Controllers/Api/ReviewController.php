@@ -67,17 +67,28 @@ class ReviewController extends Controller
     }
 
     // 口コミ一覧
-    public function index($trainerId)
+    public function index(Request $request, $trainerId)
     {
-        $reviews = Review::where('trainer_id', $trainerId)
+        // トレーナーIDと投稿者情報を変数に代入
+        $query = Review::where('trainer_id', $trainerId)
             ->with([
-                'user:id,name', // 投稿者の名前を取得
-                'user.latestDiagnosis' // 投稿者の診断結果（タイプ）を取得
-            ])
-            ->latest() // 新しい順
-            ->get();
+                'user:id,name',
+                'user.latestDiagnosis'
+            ]);
 
-        // フロントエンドで扱いやすいように整形して返す
+        // type パラメータが送られてきたら、リレーション先の user_type で絞り込む
+        // 「すべて」や空文字の場合は絞り込まないようにする
+        if ($request->filled('type') && $request->type !== 'すべて') {
+            $query->whereHas('user.latestDiagnosis', function ($q) use ($request) {
+                // Diagnosisモデルのスコープを呼び出す
+                $q->ofUserType($request->type)
+                ->whereRaw('id = (select max(id) from diagnoses as d where d.user_id = diagnoses.user_id)');
+            });
+        }
+
+        // 並び替えをしてデータを取得
+        $reviews = $query->latest()->get();
+ 
         $formattedReviews = $reviews->map(function ($review) {
             return [
                 'id' => $review->id,

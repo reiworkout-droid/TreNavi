@@ -76,4 +76,16 @@ class User extends Authenticatable
     {
         return $this->hasOne(Diagnosis::class)->latestOfMany();
     }
+    // JSONに含める項目を定義
+    protected $appends = ['user_type'];
+
+    /**
+     * 仮想的な user_type カラムを作成する（アクセサ）
+     */
+    public function getUserTypeAttribute()
+    {
+        // 最新の診断レコードから type 名を返す
+        // これにより、フロント側は今まで通り user.user_type で判定可能になる
+        return $this->latestDiagnosis?->user_type;
+    }
 }
