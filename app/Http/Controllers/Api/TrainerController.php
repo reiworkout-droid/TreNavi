@@ -169,7 +169,6 @@ class TrainerController extends Controller
             ->withMin(['plans' => fn($q) => $q->where('is_active', true)], 'price')
             ->paginate(10);
 
-        // ⭐ ここが今回の重要修正（withExistsやめた）
         $paginator->getCollection()->transform(function ($trainer) {
 
             // is_liked
