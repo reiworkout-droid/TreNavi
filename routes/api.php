@@ -88,6 +88,8 @@ Route::middleware('auth:sanctum')->group(function () {
     // 口コミ関連のAPIルート
     Route::post('/reviews', [ReviewController::class, 'store']);
     Route::get('/reviews/{review}', [ReviewController::class, 'show']);
+    // クライアント情報の閲覧ルート
+    Route::get('/trainer/client/{user}/diagnosis', [App\Http\Controllers\Api\TrainerClientController::class, 'showDiagnosis']);
 });
 // 特定のトレーナーの詳細APIのルート
 Route::get('/trainers/{trainer}', [TrainerController::class, 'show']);
