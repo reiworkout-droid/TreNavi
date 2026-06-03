@@ -16,6 +16,7 @@ use App\Http\Controllers\Api\SpecialityController;
 use App\Http\Controllers\Api\ReviewController;
 use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\DiagnosisController;
+use App\Http\Controllers\Api\TrainerClientController;
 
 // 登録APIのルート
 Route::post('/register', [AuthController::class, 'register']);
