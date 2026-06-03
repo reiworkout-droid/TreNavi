@@ -4,7 +4,9 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Models\Reservation;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class TrainerClientController extends Controller
 {
@@ -13,13 +15,21 @@ class TrainerClientController extends Controller
      */
     public function showDiagnosis(User $user)
     {
-        // ログイン中のトレーナー情報を取得
+        // ログイン中のユーザーを取得
         $trainer = Auth::user();
+
+        // ユーザーに紐づくトレーナーIDを取得
+        $trainerId = $trainer->trainer?->id;    
+
+        // トレーナー情報がない（一般ユーザーなど）の場合はここでブロック
+        if (!$trainerId) {
+            return response()->json(['message' => 'トレーナー情報が登録されていません。'], 403);
+        }
 
         // 🛡️ ここでバリデーション（認可チェック）を実行！
         // ログイン中のトレーナーが、このクライアントの予約を1件も持っていない場合は403エラーで弾く
-        $hasReservation = $trainer->reservations() 
-            ->where('user_id', $user->id)
+        $hasReservation = Reservation::where('trainer_id', $trainerId)
+            ->where('user_id', $user->id) // クライアントのユーザーID
             ->exists();
 
         if (!$hasReservation) {
