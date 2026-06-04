@@ -25,11 +25,11 @@ class DiagnosisController extends Controller
     {
         //バリデーション
         $validated = $request->validate([
-            'style'          => 'required|integer|min:0|max:100',
-            'talk'           => 'required|integer|min:0|max:100',
-            'logic'          => 'required|integer|min:0|max:100',
-            'pace'           => 'required|integer|min:0|max:100',
-            'distance'       => 'required|integer|min:0|max:100',            
+            'style'          => 'required|integer|min:0|max:5',
+            'talk'           => 'required|integer|min:0|max:5',
+            'logic'          => 'required|integer|min:0|max:5',
+            'pace'           => 'required|integer|min:0|max:5',
+            'distance'       => 'required|integer|min:0|max:5',            
         ]);
 
         // ログイン中のIDを取得
